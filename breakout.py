@@ -55,14 +55,14 @@ for e in range(episodes):
         phi = np.stack(recent_frames,axis=0)
 
         # initialize with random agent
-        if i < 10000:
+        if i < 100000:
             if i%4==0:
                 action = env.action_space.sample()
             next_state, reward, done, info =  env.step(action)
             ns = recent_frames
             state = extract_luminance(next_state)
             ns.append(state)
-            next_phi = np.stack(ns,axis=0)
+            next_phi = np.stack(ns,axis=2)
             #next_phi = np.reshape(next_phi,(1,next_phi.shape[0],next_phi.shape[1],next_phi.shape[2]))
             total_reward = total_reward+reward
             agent.remember(phi,action,total_reward,next_phi,done)
@@ -72,7 +72,7 @@ for e in range(episodes):
 
 
             if time_t%4==0:
-                phi = np.stack(recent_frames,axis=0)
+                phi = np.stack(recent_frames,axis=2)
                 action = agent.select_arm(phi)
                 next_state, reward, done, info =  env.step(action)
                 if not done: #np.count_nonzero(next_state)==0:
@@ -80,7 +80,7 @@ for e in range(episodes):
                     next_state = max_pixel(state,next_state)
                     ns = recent_frames
                     ns.append(next_state)
-                    next_phi = np.stack(ns,axis=0)
+                    next_phi = np.stack(ns,axis=2)
                     #replay.add(rf,action,reward,ns,done)
                     agent.remember(phi,action,reward,next_phi,done)
 
@@ -102,4 +102,5 @@ for e in range(episodes):
         if done:
             print("episode: {}/{}, score: {}".format(e, episodes,total_reward))
             break
-    agent.replay(32)
+    if len(agent.memory)>32:
+        agent.replay(32)

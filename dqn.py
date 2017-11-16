@@ -46,7 +46,7 @@ class DQN():
     def init_model(self):
         cb = keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0,
             write_graph=True, write_images=True)
-        inputs = Input(shape=(84,84,4))
+        inputs = Input(shape=(84,84,4,))
         conv_1 = Conv2D(32,kernel_size=(8,8),strides=(4,4),activation="relu",kernel_initializer="glorot_uniform")(inputs)
         conv_2 = Conv2D(64,kernel_size=(4,4),strides=(2,2),activation="relu",kernel_initializer="glorot_uniform")(conv_1)
         conv_3 = Conv2D(64,kernel_size=(3,3),strides=(1,1),activation="relu",kernel_initializer="glorot_uniform")(conv_2)
@@ -84,10 +84,10 @@ class DQN():
         self.model.fit(state,target_f,epochs=1,verbose=0)
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+        self.memory.append((state, action, reward,next_state, done))
 
 
-    def make_targets(transitions):
+    def make_targets(self,transitions):
         """
         Creates targets equal to the reward if done is True
         and discounted future reward otherwise
@@ -95,25 +95,49 @@ class DQN():
         transitions -- A list of tuples (s,a,r,ns,done)
 
         """
-        T = 1
-        if not y[4]:
-            T = 0
-        targets = [ y[2]+ (1-T)*(self.discount * np.amax(self.model.predict(ns)))]
+
+        targets = []
+        for y in transitions:
+            T = 1
+            if not y[4]:
+                T = 0
+
+            #print(type(ns))
+            target =  y[2]+ (1-T)*(self.discount * np.amax(self.model.predict( np.reshape(y[3],(1,84,84,4)) )))
+            #print(target)
+            targets.append(target)
+
+        targets = np.array(targets)
+        #print(targets[0].shape)thon
         return targets
 
     def q_learn_minibatch(self,batch_size):
         minibatch = random.sample(self.memory, batch_size)
         #print(minibatch[0][1].shape)
+        #print(minibatch[0][0])
         states = np.array([state[0] for state in minibatch])
+        actions = np.array([state[1] for state in minibatch])
+        #print(actions)
+        states = states.reshape((batch_size,84,84,4))
+        #print(states.shape)
         next_states = np.array([ns[3] for ns in minibatch])
         rewards = np.array([r[2] for r in minibatch])
 
         q_values = self.model.predict(states)
-        targets = make_targets(minibatch)
-        loss = ((targets-q_values)**2).mean()
-        weights = self.model.trainable_weights
-        optimizer = RMSprop(0.00025)
-        updates = optimizer.get_updates(weights,[],loss)
+        action_q = np.array([q_value[action] for q_value,action in zip(q_values,actions)]) # Predicted q-value associated with action chosen in replay
+        print(action_q)
+        #print("Q values is "+str(q_values))
+        targets = self.make_targets(minibatch)
+
+        print(targets.shape)
+
+        q_values[]
+        loss = ((targets-action_q)**2).mean()
+        self.model.fit(states,)
+        #weights = self.model.trainable_weights
+        #print(weights)
+        #optimizer = RMSprop(0.00025)
+        #updates = optimizer.get_updates(weights,[],loss)
 
     def replay(self, batch_size):
         self.q_learn_minibatch(batch_size)
