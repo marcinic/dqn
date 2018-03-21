@@ -18,7 +18,7 @@ class ReplayBuffer():
             Max number of transitions to store in the buffer. When the buffer
             overflows the old memories are dropped.
         """
-        self._storage = [] #deque(maxlen=size)
+        self._storage = [] 
         self._next_idx = 0
         self._maxsize = size
 
