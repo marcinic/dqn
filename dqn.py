@@ -11,27 +11,6 @@ from keras.callbacks import TensorBoard
 from replay_buffer import PrioritizedReplayBuffer, ReplayBuffer
 import tensorflow as tf
 
-"""import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-from torch.autograd import Variable
-import torchvision.transforms as T
-
-    def init_torch(self):
-        self.conv1 = nn.Conv2d(4,32,kernel_size=8,stride=4)
-        self.conv2 = nn.Conv2d(32,64,kernel_size=4,stride=2)
-        self.conv3 = nn.Conv2d(64,64,kernel_size=3,stride=1)
-        self.fc4 = nn.Linear(7*7*64,512)
-        self.fc5 = nn.Lineaer(512,self.n_actions)
-
-    def forward(self,x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = F.relu(self.fc4(x.view(x.size(0),-1)))
-        return self.fc5(x)
-"""
 
 
 
@@ -86,8 +65,6 @@ class DQN():
         return tf.losses.huber_loss(y_true,y_pred)
 
     def update_target_model(self):
-        #print(self.model.get_weights())
-        #print(self.target_model.get_weights())
         self.target_model.set_weights(self.model.get_weights())
 
     def load_model(self,path):
@@ -112,10 +89,6 @@ class DQN():
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.add(state, action, reward,next_state, done)
-        #if (state.shape==(84,84,4) and next_state.shape==(84,84,4)):
-        #    self.memory.add(state, action, reward,next_state, done)
-        #else:
-        #    pass
 
     def make_targets(self,minibatch):
         """
@@ -125,11 +98,10 @@ class DQN():
         minibatch -- An nd-array of (s,a,r,ns,done) * batch size
 
         """
-        #print(minibatch)
+
         actions = minibatch[1]
 
-        #weights = minibatch[5]
-        #print(weights)
+
         Q = self.model.predict(minibatch[0])
         avg_q = np.mean(Q)
         self.avg_q = avg_q
@@ -153,10 +125,10 @@ class DQN():
             self.memory.update_priorities(batch_idxes,td_error)
 
 
-        targets = Q #np.zeros((self.batch_size,self.n_actions))
+        targets = Q 
         for i in range(0,self.batch_size):
             targets[i][actions[i]] = delta_o[i]
-            #Q[i][actions[i]] = Q[i][actions[i]]+delta[i]
+
 
         return targets
 
